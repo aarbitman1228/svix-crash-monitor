@@ -255,3 +255,5 @@ src/z_scratch_pipeline_template.ipynb
 
 # pytest.ini would otherwise be caught by the *.ini rule above
 !pytest.ini
+
+.pgpass

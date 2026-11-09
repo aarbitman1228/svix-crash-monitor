@@ -26,6 +26,7 @@ import sys
 
 sys.path.insert(1, "./src/")
 
+import shlex
 import shutil
 from os import environ
 from pathlib import Path
@@ -64,10 +65,16 @@ environ["PYDEVD_DISABLE_FILE_VALIDATION"] = "1"
 def jupyter_execute_notebook(notebook_path):
     return f"jupyter nbconvert --execute --to notebook --ClearMetadataPreprocessor.enabled=True --inplace {notebook_path}"
 def jupyter_to_html(notebook_path, output_dir=OUTPUT_DIR):
-    return f"jupyter nbconvert --to html --output-dir={output_dir} {notebook_path}"
+    return (
+        f"jupyter nbconvert --to html --output-dir={shlex.quote(str(output_dir))} "
+        f"{shlex.quote(str(notebook_path))}"
+    )
 def jupyter_to_md(notebook_path, output_dir=OUTPUT_DIR):
     """Requires jupytext"""
-    return f"jupytext --to markdown --output-dir={output_dir} {notebook_path}"
+    return (
+        f"jupytext --to markdown --output-dir={shlex.quote(str(output_dir))} "
+        f"{shlex.quote(str(notebook_path))}"
+    )
 def jupyter_clear_output(notebook_path):
     """Clear the output of a notebook"""
     return f"jupyter nbconvert --ClearOutputPreprocessor.enabled=True --ClearMetadataPreprocessor.enabled=True --inplace {notebook_path}"
@@ -79,11 +86,7 @@ def mv(from_path, to_path):
     from_path = Path(from_path)
     to_path = Path(to_path)
     to_path.mkdir(parents=True, exist_ok=True)
-    if OS_TYPE == "nix":
-        command = f"mv {from_path} {to_path}"
-    else:
-        command = f"move {from_path} {to_path}"
-    return command
+    return shutil.move, (str(from_path), str(to_path))
 
 
 ##################################
@@ -226,12 +229,22 @@ def task_latest():
     ## `src/test_dodo.py`.
     return {
         "actions": [
-            # TODO: YOUR CODE HERE
+            "python ./src/settings.py",
+            "python ./src/pull_es_options.py --latest",
+            "python ./src/pull_fred.py",
+            "python ./src/monitor.py",
+            "python ./src/build_page.py",
         ],
         "file_dep": [
-            # TODO: YOUR CODE HERE
+            "./src/settings.py",
+            "./src/pull_es_options.py",
+            "./src/pull_fred.py",
+            "./src/monitor.py",
+            "./src/build_page.py",
+            "./src/monitor_chart.py",
+            *ENGINE,
         ],
-        # TODO: YOUR CODE HERE
+        "uptodate": [False],
         "verbosity": 2,
     }
 
